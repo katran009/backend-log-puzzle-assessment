@@ -29,7 +29,39 @@ def read_urls(filename):
     Screens out duplicate urls and returns the urls sorted into
     increasing order."""
     # +++your code here+++
-    pass
+    urls = []
+
+    # Extract the path from the filename
+    path = "http://" + filename.split("_")[1]
+
+    # Open the file
+    f = open(filename, 'r')
+
+    # Extract the URLs
+    urls = re.findall(r'GET (\S*puzzle\S*) HTTP', f.read())
+
+    # remove duplicates and sort
+    urls = set(urls)
+    urls = sorted(urls)
+
+    # Expand URLs to full path
+    i = 0
+    while i < len(urls):
+        urls[i] = path + urls[i]
+        i += 1
+
+    # Custom sort
+    # Custom sort helper
+    def url_sort_key(img_file):
+        img_sort = img_file.split('-')[-1]
+        return img_sort
+
+    img_name = urls[0].split('/')[-1]
+    if(len(img_name.split("-")) == 3):
+        return sorted(urls, key=url_sort_key)
+
+    # Return the sorted URLs
+    return urls
 
 
 def download_images(img_urls, dest_dir):
@@ -41,13 +73,41 @@ def download_images(img_urls, dest_dir):
     Creates the directory if necessary.
     """
     # +++your code here+++
-    pass
+    # Check to see if the directory exists. If not, create it.
+    if not (os.path.exists(dest_dir)):
+        os.mkdir(dest_dir)
+
+    # Create an index.html
+    index = open(os.path.join(dest_dir, 'index.html'), 'w+')
+    index.write('<html>\n<body>\n')
+
+    # Download the images into the destination dir
+    for i in range(len(img_urls)):
+        # build image name string
+        img_name = "img" + str(i)
+
+        # build image path string
+        img_link = os.path.join(dest_dir, img_name)
+
+        # Print a status for each img
+        print "Retrieving " + img_name + "..."
+
+        # Download each image to the destination dir
+        urllib.urlretrieve(img_urls[i], img_link)
+
+        # Add the image to the index.html file
+        index.write('<img src="' + img_name + '">')
+
+    # Wrap up the index file
+    index.write("\n</body>\n</html>")
+    index.close()
 
 
 def create_parser():
     """Create an argument parser object"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--todir',  help='destination directory for downloaded images')
+    parser.add_argument(
+        '-d', '--todir',  help='destination directory for downloaded images')
     parser.add_argument('logfile', help='apache logfile to extract urls from')
 
     return parser
